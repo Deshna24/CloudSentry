@@ -1,0 +1,78 @@
+# OPTIONAL Render Blueprint (New + > Blueprint). Creates a free PostgreSQL and two backend instances.
+# The step-by-step manual setup in docs/deployment.md is the primary guide; this file only automates it.
+# After the first deploy, set CORS_ORIGINS and the demo passwords in the Render dashboard.
+databases:
+  - name: cloudsentry-db
+    plan: free
+    databaseName: cloudsentry
+    user: cloudsentry
+
+envVarGroups:
+  - name: cloudsentry-shared
+    envVars:
+      - key: JWT_SECRET          # shared by both instances so a token works on either one
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: EXPECTED_INSTANCES
+        value: API-01,API-02
+
+services:
+  - type: web
+    name: cloudsentry-api-01
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: cloudsentry-shared
+      - key: INSTANCE_ID
+        value: API-01
+      - key: DATABASE_URL
+        fromDatabase: { name: cloudsentry-db, property: connectionString }
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ANALYST_PASSWORD
+        sync: false
+
+  - type: web
+    name: cloudsentry-api-02
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: cloudsentry-shared
+      - key: INSTANCE_ID
+        value: API-02
+      - key: DATABASE_URL
+        fromDatabase: { name: cloudsentry-db, property: connectionString }
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ANALYST_PASSWORD
+        sync: false
+
+  # Load balancer (Docker + Nginx, public-URL mode). Set the two hostnames after the API services exist.
+  - type: web
+    name: cloudsentry-lb
+    runtime: docker
+    rootDir: lb
+    plan: free
+    healthCheckPath: /lb-health
+    envVars:
+      - key: LB_MODE
+        value: public
+      - key: UPSTREAM_1_HOST
+        sync: false          # e.g. cloudsentry-api-01.onrender.com
+      - key: UPSTREAM_2_HOST
+        sync: false          # e.g. cloudsentry-api-02.onrender.com

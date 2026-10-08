@@ -1,0 +1,25 @@
+# secrets and local config
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.db
+*.sqlite3
+
+# node
+node_modules/
+dist/
+*.log
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
