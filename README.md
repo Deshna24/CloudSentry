@@ -87,10 +87,6 @@ payload_size, user_role, threat_type, risk_score, severity, action, instance_id`
 same engine used live, so the data is consistent. Attacker IPs come from the documentation ranges (203.0.113.0/24,
 198.51.100.0/24, 192.0.2.0/24). Re-seed: `python -m app.services.seed --count 3000 --reset`.
 
-## Screenshots
-Add your own after running the demo, then reference them here:
-`docs/img/dashboard.png`, `docs/img/attack.png`, `docs/img/threat-detail.png`, `docs/img/instances.png`.
-
 ## Local setup (without Docker)
 Requires Python 3.11+ and Node 18+. Without `DATABASE_URL` the backend uses a local SQLite file.
 ```bash
